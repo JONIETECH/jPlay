@@ -219,7 +219,7 @@ class AppState extends State<Jplay> {
                       padding: const EdgeInsets.only(left: 42.0),
                       child: Center(
                         child: GradientText(
-                          "jplay.",
+                          "jPlay",
                           gradient: LinearGradient(colors: [
                             Color(0xff4db6ac),
                             Color(0xff61e88a),
