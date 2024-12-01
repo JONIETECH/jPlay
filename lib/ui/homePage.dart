@@ -19,6 +19,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:jplay/widgets/gradient_text.dart';
 import 'package:jplay/widgets/audio_player.dart';
 import 'package:jplay/ui/directory_browser.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:jplay/services/audio_service.dart';
 
 class Jplay extends StatefulWidget {
   @override
@@ -64,10 +66,29 @@ class AppState extends State<Jplay> {
     setState(() => fetchingSongs = false);
   }
 
-  Future<void> getSongDetails(String id, BuildContext context) async {
+  Future<void> getSongDetails(String id, BuildContext context, {List<Map<String, dynamic>>? folderSongs}) async {
     try {
       var details = await MusicAPI.getSongDetails(id);
       if (details['url'] != null) {
+        if (folderSongs != null) {
+          // Create queue from folder songs
+          final nonDirectories = folderSongs.where((s) => !(s['isDirectory'] ?? false)).toList();
+          // Start from the selected song
+          final startIndex = nonDirectories.indexWhere((s) => s['id'] == id);
+          if (startIndex != -1) {
+            final reorderedSongs = [
+              ...nonDirectories.sublist(startIndex),
+              ...nonDirectories.sublist(0, startIndex),
+            ];
+            await AudioService.instance.playPlaylist(reorderedSongs);
+          } else {
+            await AudioService.instance.playPlaylist([details]);
+          }
+        } else {
+          // Single song playback
+          await AudioService.instance.playPlaylist([details]);
+        }
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -389,7 +410,7 @@ class AppState extends State<Jplay> {
                                         ),
                                       );
                                     } else {
-                                      getSongDetails(item['id'], context);
+                                      getSongDetails(item['id'], context, folderSongs: items);
                                     }
                                   },
                                 );
