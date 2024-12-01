@@ -61,9 +61,12 @@ class AudioService {
 
   Future<void> playSong(Map<String, dynamic> song) async {
     try {
-      await _player.setFilePath(song['url']);
+      // Update current song immediately
       _currentSong = song;
       _currentSongController.add(song);
+
+      // Then start playback
+      await _player.setFilePath(song['url']);
       await PlaylistManager.instance.addToRecentlyPlayed(song);
       await play();
 
@@ -75,6 +78,9 @@ class AudioService {
       });
     } catch (e) {
       print('Error playing song: $e');
+      // Reset current song with empty map
+      _currentSong = null;
+      _currentSongController.add({});
     }
   }
 
@@ -95,13 +101,23 @@ class AudioService {
   }
 
   Future<void> play() async {
-    await _player.play();
-    _playingController.add(true);
+    try {
+      await _player.play();
+      _playingController.add(true);
+    } catch (e) {
+      print('Error playing: $e');
+      _playingController.add(false);
+    }
   }
 
   Future<void> pause() async {
-    await _player.pause();
-    _playingController.add(false);
+    try {
+      await _player.pause();
+      _playingController.add(false);
+    } catch (e) {
+      print('Error pausing: $e');
+      _playingController.add(true);
+    }
   }
 
   Future<void> stop() async {

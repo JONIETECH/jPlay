@@ -4,6 +4,7 @@ import 'package:jplay/style/appColors.dart';
 import 'package:jplay/services/audio_service.dart';
 import 'package:jplay/widgets/audio_player.dart';
 import 'package:jplay/widgets/play_pause_button.dart';
+import 'package:jplay/widgets/music_thumbnail.dart';
 
 class MiniPlayer extends StatelessWidget {
   @override
@@ -11,19 +12,21 @@ class MiniPlayer extends StatelessWidget {
     return StreamBuilder<Map<String, dynamic>>(
       stream: AudioService.instance.currentSongStream,
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return SizedBox.shrink();
+        if (!snapshot.hasData || snapshot.data == null) return SizedBox.shrink();
         
         final song = snapshot.data!;
+        if (song['title'] == null || song['artist'] == null) return SizedBox.shrink();
+        
         return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => AudioPlayerScreen(
-                  videoId: song['id'],
-                  title: song['title'],
-                  artist: song['artist'],
-                  thumbnail: song['image'],
+                  videoId: song['id'] ?? '',
+                  title: song['title'] ?? '',
+                  artist: song['artist'] ?? 'Unknown Artist',
+                  thumbnail: song['image'] ?? '',
                 ),
               ),
             );
@@ -39,53 +42,43 @@ class MiniPlayer extends StatelessWidget {
                 ),
               ],
             ),
-            child: Row(
+            child: Column(
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: song['image']?.isNotEmpty ?? false
-                    ? Image.file(
-                        File(song['image']),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(Icons.music_note, color: accent),
-                      )
-                    : Icon(Icons.music_note, color: accent),
-                ),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          song['title'],
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
+                  child: Row(
+                    children: [
+                      MusicThumbnail(),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(song['title'], style: TextStyle(color: Colors.white, fontSize: 16)),
+                              Text(song['artist'], style: TextStyle(color: accentLight, fontSize: 14)),
+                            ],
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          song['artist'],
-                          style: TextStyle(
-                            color: accentLight,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+                      ),
+                      PlayPauseButton(size: 24, mini: true),
+                    ],
                   ),
                 ),
-                PlayPauseButton(size: 24, mini: true),
+                // Progress Bar
+                StreamBuilder<Duration>(
+                  stream: AudioService.instance.positionStream,
+                  builder: (context, snapshot) {
+                    final position = snapshot.data ?? Duration.zero;
+                    final duration = AudioService.instance.duration ?? Duration.zero;
+                    return LinearProgressIndicator(
+                      value: duration.inSeconds > 0 ? position.inSeconds / duration.inSeconds : 0,
+                      backgroundColor: Colors.grey[800],
+                      valueColor: AlwaysStoppedAnimation<Color>(accent),
+                      minHeight: 2,
+                    );
+                  },
+                ),
               ],
             ),
           ),

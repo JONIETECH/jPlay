@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:jplay/style/appColors.dart';
 import 'package:jplay/services/audio_service.dart';
 import 'package:jplay/services/playlist_manager.dart';
+import 'package:jplay/widgets/music_thumbnail.dart';
 
 class SongTile extends StatelessWidget {
   final Map<String, dynamic> song;
@@ -22,7 +23,7 @@ class SongTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.music_note, color: accent),
+      leading: MusicThumbnail(size: 50, iconSize: 20),
       title: Text(
         song['title'] ?? '',
         style: TextStyle(color: Colors.white),

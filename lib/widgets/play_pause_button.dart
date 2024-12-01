@@ -15,6 +15,7 @@ class PlayPauseButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<bool>(
       stream: AudioService.instance.playingStream,
+      initialData: false,
       builder: (context, snapshot) {
         final isPlaying = snapshot.data ?? false;
         return IconButton(
@@ -25,11 +26,11 @@ class PlayPauseButton extends StatelessWidget {
             color: accent,
           ),
           iconSize: size,
-          onPressed: () {
+          onPressed: () async {
             if (isPlaying) {
-              AudioService.instance.pause();
+              await AudioService.instance.pause();
             } else {
-              AudioService.instance.play();
+              await AudioService.instance.play();
             }
           },
         );

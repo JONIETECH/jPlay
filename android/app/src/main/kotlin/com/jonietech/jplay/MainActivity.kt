@@ -1,4 +1,4 @@
-package com.example.jplay
+package com.jonietech.jplay
 
 import io.flutter.embedding.android.FlutterActivity
 

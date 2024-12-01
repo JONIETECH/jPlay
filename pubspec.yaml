@@ -41,7 +41,7 @@ dependencies:
   loading_animation_widget: ^1.2.0+4
   url_launcher: ^6.3.1
   material_design_icons_flutter: ^7.0.7296
-  on_audio_query: ^2.9.0
+  flutter_launcher_icons: ^0.14.1
 
 
 dev_dependencies:
@@ -54,6 +54,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  change_app_package_name: ^1.4.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -73,3 +74,23 @@ flutter:
         - asset: fonts/DMSans-Italic.ttf
         - asset: fonts/DMSans-Regular.ttf
         - asset: fonts/DMSans-Medium.ttf
+  assets:
+    - assets/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/appicon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/appicon.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "assets/appicon.png"
+    icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "assets/appicon.png"

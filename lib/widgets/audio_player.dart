@@ -4,6 +4,7 @@ import 'package:jplay/services/audio_service.dart';
 import 'package:jplay/services/playlist_manager.dart';
 import 'dart:io';
 import 'package:jplay/widgets/play_pause_button.dart';
+import 'package:jplay/widgets/music_thumbnail.dart';
 
 class AudioPlayerScreen extends StatefulWidget {
   final String videoId;
@@ -115,39 +116,10 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Album Art
-                      Container(
-                        width: MediaQuery.of(context).size.width * 0.8,
-                        height: MediaQuery.of(context).size.width * 0.8,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[800],
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              offset: Offset(0, 20),
-                              blurRadius: 32,
-                              spreadRadius: 16,
-                            )
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: song['image']?.isNotEmpty ?? false
-                            ? Image.file(
-                                File(song['image']),
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.music_note,
-                                  color: accent,
-                                  size: 80,
-                                ),
-                              )
-                            : Icon(
-                                Icons.music_note,
-                                color: accent,
-                                size: 80,
-                              ),
-                        ),
+                      MusicThumbnail(
+                        size: MediaQuery.of(context).size.width * 0.8,
+                        iconSize: 80,
+                        borderRadius: 20,
                       ),
                       SizedBox(height: 40),
                       // Title and Artist
