@@ -70,24 +70,28 @@ class AppState extends State<Jplay> {
     try {
       var details = await MusicAPI.getSongDetails(id);
       if (details['url'] != null) {
+        List<Map<String, dynamic>> queue;
+        
         if (folderSongs != null) {
-          // Create queue from folder songs
-          final nonDirectories = folderSongs.where((s) => !(s['isDirectory'] ?? false)).toList();
-          // Start from the selected song
-          final startIndex = nonDirectories.indexWhere((s) => s['id'] == id);
-          if (startIndex != -1) {
-            final reorderedSongs = [
-              ...nonDirectories.sublist(startIndex),
-              ...nonDirectories.sublist(0, startIndex),
-            ];
-            await AudioService.instance.playPlaylist(reorderedSongs);
-          } else {
-            await AudioService.instance.playPlaylist([details]);
-          }
+          // Use provided folder songs
+          queue = folderSongs.where((s) => !s['isDirectory']).toList();
         } else {
-          // Single song playback
-          await AudioService.instance.playPlaylist([details]);
+          // Get all songs if playing from search/all songs
+          queue = await MusicAPI.getAllSongs();
         }
+
+        // Find start index
+        final startIndex = queue.indexWhere((s) => s['id'] == id);
+        if (startIndex != -1) {
+          // Reorder queue to start from selected song
+          queue = [
+            ...queue.sublist(startIndex),
+            ...queue.sublist(0, startIndex),
+          ];
+        }
+
+        // Play the queue
+        await AudioService.instance.playPlaylist(queue);
 
         Navigator.push(
           context,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jplay/style/appColors.dart';
-import 'package:jplay/services/audio_service.dart';
+import 'package:jplay/services/audio_service.dart' show AudioService, RepeatMode;
 import 'package:jplay/services/playlist_manager.dart';
 import 'dart:io';
 import 'package:jplay/widgets/play_pause_button.dart';
@@ -26,7 +26,6 @@ class AudioPlayerScreen extends StatefulWidget {
 class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
   bool _isFavorite = false;
   bool _isShuffled = false;
-  bool _isRepeating = false;
   late Map<String, dynamic> _currentSong;
 
   @override
@@ -220,12 +219,14 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                       ),
                       IconButton(
                         icon: Icon(
-                          _isRepeating ? Icons.repeat_one : Icons.repeat,
-                          color: _isRepeating ? accent : Colors.white70,
+                          _getRepeatIcon(),
+                          color: AudioService.instance.repeatMode != RepeatMode.none 
+                            ? accent 
+                            : Colors.white70,
                         ),
                         onPressed: () {
-                          setState(() => _isRepeating = !_isRepeating);
-                          // TODO: Implement repeat functionality
+                          AudioService.instance.cycleRepeatMode();
+                          setState(() {}); // Refresh UI
                         },
                       ),
                     ],
@@ -244,5 +245,16 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return "$minutes:$seconds";
+  }
+
+  IconData _getRepeatIcon() {
+    switch (AudioService.instance.repeatMode) {
+      case RepeatMode.none:
+        return Icons.repeat;
+      case RepeatMode.all:
+        return Icons.repeat;
+      case RepeatMode.one:
+        return Icons.repeat_one;
+    }
   }
 } 

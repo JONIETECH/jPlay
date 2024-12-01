@@ -206,6 +206,14 @@ class MusicAPI {
       .toList();
     return allSongs.take(20).toList();
   }
+
+  static Future<List<Map<String, dynamic>>> getAllSongs() async {
+    final folders = await getMusicByFolders();
+    return folders.values
+      .expand((songs) => songs)
+      .where((song) => !song['isDirectory'])
+      .toList();
+  }
 } 
 
 enum SortType { TITLE, ARTIST, FOLDER } 

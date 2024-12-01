@@ -72,8 +72,8 @@ class _MainScreenState extends State<MainScreen> {
           backgroundColor: Color(0xff263238),
           items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
+              icon: Icon(Icons.folder),
+              label: 'Browse',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.library_music),

@@ -5,6 +5,8 @@ import 'dart:math';
 import 'package:just_audio/just_audio.dart';
 import 'package:jplay/services/playlist_manager.dart';
 
+enum RepeatMode { none, all, one }
+
 class AudioService {
   static final AudioService instance = AudioService._internal();
   AudioService._internal();
@@ -61,24 +63,25 @@ class AudioService {
 
   Future<void> playSong(Map<String, dynamic> song) async {
     try {
-      // Update current song immediately
       _currentSong = song;
       _currentSongController.add(song);
 
-      // Then start playback
       await _player.setFilePath(song['url']);
       await PlaylistManager.instance.addToRecentlyPlayed(song);
       await play();
 
-      // Setup completion listener for auto-next
       _player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
-          playNext();
+          if (_repeatMode == RepeatMode.one) {
+            _player.seek(Duration.zero);
+            play();
+          } else {
+            playNext();
+          }
         }
       });
     } catch (e) {
       print('Error playing song: $e');
-      // Reset current song with empty map
       _currentSong = null;
       _currentSongController.add({});
     }
@@ -87,16 +90,22 @@ class AudioService {
   Future<void> playNext() async {
     if (_queue.isEmpty) return;
     final currentIndex = _queue.indexWhere((s) => s['id'] == _currentSong?['id']);
+    
     if (currentIndex < _queue.length - 1) {
       await playSong(_queue[currentIndex + 1]);
+    } else if (_repeatMode == RepeatMode.all && _queue.isNotEmpty) {
+      await playSong(_queue[0]);
     }
   }
 
   Future<void> playPrevious() async {
     if (_queue.isEmpty) return;
     final currentIndex = _queue.indexWhere((s) => s['id'] == _currentSong?['id']);
+    
     if (currentIndex > 0) {
       await playSong(_queue[currentIndex - 1]);
+    } else if (_repeatMode == RepeatMode.all && _queue.isNotEmpty) {
+      await playSong(_queue.last);
     }
   }
 
@@ -157,4 +166,21 @@ class AudioService {
   Stream<Duration> get positionStream => _player.positionStream;
   Stream<Duration?> get durationStream => _player.durationStream;
   Duration? get duration => _player.duration;
+
+  RepeatMode _repeatMode = RepeatMode.none;
+  RepeatMode get repeatMode => _repeatMode;
+
+  void cycleRepeatMode() {
+    switch (_repeatMode) {
+      case RepeatMode.none:
+        _repeatMode = RepeatMode.all;
+        break;
+      case RepeatMode.all:
+        _repeatMode = RepeatMode.one;
+        break;
+      case RepeatMode.one:
+        _repeatMode = RepeatMode.none;
+        break;
+    }
+  }
 } 
