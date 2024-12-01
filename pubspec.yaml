@@ -41,7 +41,6 @@ dependencies:
   loading_animation_widget: ^1.2.0+4
   url_launcher: ^6.3.1
   material_design_icons_flutter: ^7.0.7296
-  audiotagger: ^2.2.1
   on_audio_query: ^2.9.0
 
 

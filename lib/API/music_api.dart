@@ -4,8 +4,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:audiotagger/audiotagger.dart';
-import 'package:audiotagger/models/tag.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 class MusicAPI {
@@ -105,17 +103,16 @@ class MusicAPI {
       final artwork = await _audioQuery.queryArtwork(
         songId,
         ArtworkType.AUDIO,
-        size: 500, // Size of artwork
-        quality: 100, // Quality of artwork
+        size: 500,
+        quality: 100,
       );
-
-      // Get metadata from audiotagger
-      final tagger = Audiotagger();
-      final tags = await tagger.readTags(path: filePath);
+      
+      // Get title from filename
+      final fileName = filePath.split('/').last.replaceAll('.mp3', '');
       
       return {
-        'title': tags?.title ?? filePath.split('/').last.replaceAll('.mp3', ''),
-        'artist': tags?.artist ?? 'Unknown Artist',
+        'title': fileName,
+        'artist': 'Unknown Artist',
         'image': artwork != null ? await _saveArtwork(artwork, filePath) : '',
       };
     } catch (e) {

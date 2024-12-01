@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:jplay/style/appColors.dart';
 import 'package:jplay/services/audio_service.dart';
 import 'package:jplay/services/playlist_manager.dart';
