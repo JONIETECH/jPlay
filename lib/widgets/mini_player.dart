@@ -40,13 +40,21 @@ class MiniPlayer extends StatelessWidget {
             ),
             child: Row(
               children: [
-                if (song['image']?.isNotEmpty ?? false)
-                  Image.file(
-                    File(song['image']),
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[800],
+                    borderRadius: BorderRadius.circular(4),
                   ),
+                  child: song['image']?.isNotEmpty ?? false
+                    ? Image.file(
+                        File(song['image']),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(Icons.music_note, color: accent),
+                      )
+                    : Icon(Icons.music_note, color: accent),
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),

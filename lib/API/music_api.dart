@@ -3,6 +3,8 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:audiotagger/audiotagger.dart';
+import 'package:audiotagger/models/tag.dart';
 
 class MusicAPI {
   static Future<Map<String, List<Map<String, dynamic>>>> getMusicByFolders() async {
@@ -65,19 +67,21 @@ class MusicAPI {
     try {
       await for (var entity in dir.list(recursive: recursive, followLinks: false)) {
         if (entity is File && entity.path.toLowerCase().endsWith('.mp3')) {
+          final filePath = entity.absolute.path;
+          final metadata = await _extractMetadata(filePath);
+          
           musicFolders[folderKey]!.add({
-            'id': entity.path,
-            'title': entity.path.split('/').last.replaceAll('.mp3', ''),
-            'artist': 'Unknown Artist',
-            'url': entity.path,
-            'image': '',
+            'id': filePath,
+            'title': metadata['title'],
+            'artist': metadata['artist'],
+            'url': filePath,
+            'image': metadata['image'],
             'folder': folderKey,
             'isDirectory': false,
           });
         } else if (entity is Directory && !recursive) {
-          // Add directory as a browsable item
           musicFolders[folderKey]!.add({
-            'id': entity.path,
+            'id': entity.absolute.path,
             'title': entity.path.split('/').last,
             'isDirectory': true,
           });
@@ -85,6 +89,40 @@ class MusicAPI {
       }
     } catch (e) {
       print('Error scanning directory ${dir.path}: $e');
+    }
+  }
+
+  static Future<Map<String, dynamic>> _extractMetadata(String filePath) async {
+    try {
+      final tagger = Audiotagger();
+      final Tag? tags = await tagger.readTags(path: filePath);
+      final artwork = await tagger.readArtwork(path: filePath);
+      
+      return {
+        'title': tags?.title ?? filePath.split('/').last.replaceAll('.mp3', ''),
+        'artist': tags?.artist ?? 'Unknown Artist',
+        'image': artwork != null ? await _saveAlbumArt(artwork, filePath) : '',
+      };
+    } catch (e) {
+      print('Error extracting metadata: $e');
+      return {
+        'title': filePath.split('/').last.replaceAll('.mp3', ''),
+        'artist': 'Unknown Artist',
+        'image': '',
+      };
+    }
+  }
+
+  static Future<String> _saveAlbumArt(List<int> artwork, String songPath) async {
+    try {
+      final cacheDir = await getTemporaryDirectory();
+      final fileName = songPath.split('/').last.replaceAll('.mp3', '_cover.jpg');
+      final file = File('${cacheDir.path}/$fileName');
+      await file.writeAsBytes(artwork);
+      return file.path;
+    } catch (e) {
+      print('Error saving album art: $e');
+      return '';
     }
   }
 
@@ -156,15 +194,18 @@ class MusicAPI {
     try {
       final file = File(path);
       if (await file.exists()) {
-        final name = path.split('/').last.replaceAll('.mp3', '');
+        final filePath = file.absolute.path;
+        final metadata = await _extractMetadata(filePath);
+        
         return {
-          'id': path,
-          'title': name,
-          'artist': 'Unknown Artist',
-          'url': path,
-          'image': '',
+          'id': filePath,
+          'title': metadata['title'],
+          'artist': metadata['artist'],
+          'url': filePath,
+          'image': metadata['image'],
         };
       }
+      print('File does not exist: $path');
       return {};
     } catch (e) {
       print('Error getting song details: $e');

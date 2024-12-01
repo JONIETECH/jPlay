@@ -3,6 +3,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:jplay/style/appColors.dart';
 import 'package:jplay/services/audio_service.dart';
 import 'package:jplay/services/playlist_manager.dart';
+import 'dart:io';
 
 class AudioPlayerScreen extends StatefulWidget {
   final String videoId;
@@ -106,6 +107,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                     width: MediaQuery.of(context).size.width * 0.8,
                     height: MediaQuery.of(context).size.width * 0.8,
                     decoration: BoxDecoration(
+                      color: Colors.grey[800],
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -118,7 +120,21 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
-                      child: Image.network(widget.thumbnail, fit: BoxFit.cover),
+                      child: widget.thumbnail.isNotEmpty
+                        ? Image.file(
+                            File(widget.thumbnail),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Icon(
+                              Icons.music_note,
+                              color: accent,
+                              size: 80,
+                            ),
+                          )
+                        : Icon(
+                            Icons.music_note,
+                            color: accent,
+                            size: 80,
+                          ),
                     ),
                   ),
                   SizedBox(height: 40),

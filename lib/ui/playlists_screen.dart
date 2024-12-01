@@ -28,19 +28,10 @@ class PlaylistsScreen extends StatelessWidget {
                   title: Text('Merge Playlists', style: TextStyle(color: Colors.white)),
                 ),
               ),
-              PopupMenuItem(
-                value: 'import',
-                child: ListTile(
-                  leading: Icon(Icons.file_download, color: accent),
-                  title: Text('Import Playlist', style: TextStyle(color: Colors.white)),
-                ),
-              ),
             ],
             onSelected: (value) {
               if (value == 'merge') {
                 _showMergeDialog(context);
-              } else if (value == 'import') {
-                // TODO: Implement import
               }
             },
           ),
@@ -102,14 +93,6 @@ class PlaylistsScreen extends StatelessWidget {
                             _showRenameDialog(context, name);
                           },
                         ),
-                        ListTile(
-                          leading: Icon(Icons.file_upload, color: accent),
-                          title: Text('Export', style: TextStyle(color: Colors.white)),
-                          onTap: () {
-                            Navigator.pop(context);
-                            PlaylistManager.instance.exportPlaylist(name);
-                          },
-                        ),
                       ],
                     ),
                   );
@@ -164,7 +147,115 @@ class PlaylistsScreen extends StatelessWidget {
   }
 
   void _showMergeDialog(BuildContext context) {
-    // TODO: Implement merge dialog
+    String? playlist1;
+    String? playlist2;
+    final newNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Color(0xff263238),
+          title: Text('Merge Playlists', style: TextStyle(color: accent)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
+                future: PlaylistManager.instance.getPlaylists(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return CircularProgressIndicator();
+                  final playlists = snapshot.data!.keys.toList();
+                  
+                  return Column(
+                    children: [
+                      // First playlist dropdown
+                      DropdownButtonFormField<String>(
+                        value: playlist1,
+                        dropdownColor: Color(0xff263238),
+                        decoration: InputDecoration(
+                          labelText: 'First Playlist',
+                          labelStyle: TextStyle(color: accent),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: accent),
+                          ),
+                        ),
+                        style: TextStyle(color: Colors.white),
+                        items: playlists.map((name) => DropdownMenuItem(
+                          value: name,
+                          child: Text(name),
+                        )).toList(),
+                        onChanged: (value) => setState(() => playlist1 = value),
+                      ),
+                      SizedBox(height: 16),
+                      // Second playlist dropdown
+                      DropdownButtonFormField<String>(
+                        value: playlist2,
+                        dropdownColor: Color(0xff263238),
+                        decoration: InputDecoration(
+                          labelText: 'Second Playlist',
+                          labelStyle: TextStyle(color: accent),
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: accent),
+                          ),
+                        ),
+                        style: TextStyle(color: Colors.white),
+                        items: playlists.map((name) => DropdownMenuItem(
+                          value: name,
+                          child: Text(name),
+                        )).toList(),
+                        onChanged: (value) => setState(() => playlist2 = value),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              SizedBox(height: 16),
+              // New playlist name
+              TextField(
+                controller: newNameController,
+                style: TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'New Playlist Name',
+                  labelStyle: TextStyle(color: accent),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: accent),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: accent),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel', style: TextStyle(color: accent)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            TextButton(
+              child: Text('Merge', style: TextStyle(color: accent)),
+              onPressed: () async {
+                final newName = newNameController.text.trim();
+                if (playlist1 != null && playlist2 != null && newName.isNotEmpty) {
+                  await PlaylistManager.instance.mergePlaylists(
+                    playlist1!,
+                    playlist2!,
+                    newName,
+                  );
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Playlists merged'),
+                      backgroundColor: accent,
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showRenameDialog(BuildContext context, String name) {

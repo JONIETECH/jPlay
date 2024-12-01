@@ -1,8 +1,5 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:file_picker/file_picker.dart';
 
 class PlaylistManager {
   static final PlaylistManager instance = PlaylistManager._internal();
@@ -11,6 +8,7 @@ class PlaylistManager {
   static const String _playlistsKey = 'playlists';
   static const String _favoritesKey = 'favorites';
   static const String _recentlyPlayedKey = 'recently_played';
+  static const String _searchHistoryKey = 'search_history';
 
   Future<void> createPlaylist(String name) async {
     final prefs = await SharedPreferences.getInstance();
@@ -149,54 +147,29 @@ class PlaylistManager {
     }
   }
 
-  Future<String> exportPlaylist(String playlistName) async {
-    try {
-      final playlists = await getPlaylists();
-      if (!playlists.containsKey(playlistName)) return '';
-
-      final playlist = playlists[playlistName]!;
-      final json = jsonEncode({
-        'name': playlistName,
-        'songs': playlist,
-      });
-
-      final dir = await getExternalStorageDirectory();
-      if (dir == null) return '';
-
-      final file = File('${dir.path}/$playlistName.jplay');
-      await file.writeAsString(json);
-      return file.path;
-    } catch (e) {
-      print('Error exporting playlist: $e');
-      return '';
+  Future<void> addToSearchHistory(String query) async {
+    final prefs = await SharedPreferences.getInstance();
+    final history = await getSearchHistory();
+    
+    // Remove if already exists and add to beginning
+    history.removeWhere((q) => q.toLowerCase() == query.toLowerCase());
+    history.insert(0, query);
+    
+    // Keep only last 10 searches
+    if (history.length > 10) {
+      history.removeLast();
     }
+    
+    await prefs.setStringList(_searchHistoryKey, history);
   }
 
-  Future<bool> importPlaylist(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (!await file.exists()) return false;
+  Future<List<String>> getSearchHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_searchHistoryKey) ?? [];
+  }
 
-      final content = await file.readAsString();
-      final data = jsonDecode(content);
-      
-      final name = data['name'] as String;
-      final songs = List<Map<String, dynamic>>.from(data['songs']);
-      
-      // Verify song files exist
-      songs.removeWhere((song) => !File(song['url']).existsSync());
-      
-      if (songs.isEmpty) return false;
-
-      final playlists = await getPlaylists();
-      playlists[name] = songs;
-      
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_playlistsKey, jsonEncode(playlists));
-      return true;
-    } catch (e) {
-      print('Error importing playlist: $e');
-      return false;
-    }
+  Future<void> clearSearchHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_searchHistoryKey);
   }
 } 
