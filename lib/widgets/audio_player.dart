@@ -4,6 +4,7 @@ import 'package:jplay/style/appColors.dart';
 import 'package:jplay/services/audio_service.dart';
 import 'package:jplay/services/playlist_manager.dart';
 import 'dart:io';
+import 'package:jplay/widgets/play_pause_button.dart';
 
 class AudioPlayerScreen extends StatefulWidget {
   final String videoId;
@@ -228,26 +229,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                     iconSize: 40,
                     onPressed: () => AudioService.instance.playPrevious(),
                   ),
-                  StreamBuilder<bool>(
-                    stream: AudioService.instance.playingStream,
-                    builder: (context, snapshot) {
-                      final isPlaying = snapshot.data ?? false;
-                      return IconButton(
-                        icon: Icon(
-                          isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-                          color: accent,
-                        ),
-                        iconSize: 80,
-                        onPressed: () {
-                          if (isPlaying) {
-                            AudioService.instance.pause();
-                          } else {
-                            AudioService.instance.play();
-                          }
-                        },
-                      );
-                    },
-                  ),
+                  PlayPauseButton(size: 80),
                   IconButton(
                     icon: Icon(Icons.skip_next, color: Colors.white),
                     iconSize: 40,

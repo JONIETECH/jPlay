@@ -1,12 +1,16 @@
 // ignore_for_file: unused_import
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audiotagger/audiotagger.dart';
 import 'package:audiotagger/models/tag.dart';
+import 'package:on_audio_query/on_audio_query.dart';
 
 class MusicAPI {
+  static final OnAudioQuery _audioQuery = OnAudioQuery();
+
   static Future<Map<String, List<Map<String, dynamic>>>> getMusicByFolders() async {
     if (!await _requestPermission()) return {};
 
@@ -94,14 +98,25 @@ class MusicAPI {
 
   static Future<Map<String, dynamic>> _extractMetadata(String filePath) async {
     try {
+      // Get song ID from path
+      final songId = int.tryParse(filePath.split('/').last.split('.').first) ?? 0;
+      
+      // Get artwork
+      final artwork = await _audioQuery.queryArtwork(
+        songId,
+        ArtworkType.AUDIO,
+        size: 500, // Size of artwork
+        quality: 100, // Quality of artwork
+      );
+
+      // Get metadata from audiotagger
       final tagger = Audiotagger();
-      final Tag? tags = await tagger.readTags(path: filePath);
-      final artwork = await tagger.readArtwork(path: filePath);
+      final tags = await tagger.readTags(path: filePath);
       
       return {
         'title': tags?.title ?? filePath.split('/').last.replaceAll('.mp3', ''),
         'artist': tags?.artist ?? 'Unknown Artist',
-        'image': artwork != null ? await _saveAlbumArt(artwork, filePath) : '',
+        'image': artwork != null ? await _saveArtwork(artwork, filePath) : '',
       };
     } catch (e) {
       print('Error extracting metadata: $e');
@@ -113,7 +128,7 @@ class MusicAPI {
     }
   }
 
-  static Future<String> _saveAlbumArt(List<int> artwork, String songPath) async {
+  static Future<String> _saveArtwork(Uint8List artwork, String songPath) async {
     try {
       final cacheDir = await getTemporaryDirectory();
       final fileName = songPath.split('/').last.replaceAll('.mp3', '_cover.jpg');
@@ -121,7 +136,7 @@ class MusicAPI {
       await file.writeAsBytes(artwork);
       return file.path;
     } catch (e) {
-      print('Error saving album art: $e');
+      print('Error saving artwork: $e');
       return '';
     }
   }

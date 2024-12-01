@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:jplay/style/appColors.dart';
 import 'package:jplay/services/audio_service.dart';
 import 'package:jplay/widgets/audio_player.dart';
+import 'package:jplay/widgets/play_pause_button.dart';
 
 class MiniPlayer extends StatelessWidget {
   @override
@@ -84,25 +85,7 @@ class MiniPlayer extends StatelessWidget {
                     ),
                   ),
                 ),
-                StreamBuilder<bool>(
-                  stream: AudioService.instance.playingStream,
-                  builder: (context, snapshot) {
-                    final isPlaying = snapshot.data ?? false;
-                    return IconButton(
-                      icon: Icon(
-                        isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: accent,
-                      ),
-                      onPressed: () {
-                        if (isPlaying) {
-                          AudioService.instance.pause();
-                        } else {
-                          AudioService.instance.play();
-                        }
-                      },
-                    );
-                  },
-                ),
+                PlayPauseButton(size: 24, mini: true),
               ],
             ),
           ),
